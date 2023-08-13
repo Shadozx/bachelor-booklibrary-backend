@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+    <meta th:name="_csrf" th:content="${_csrf.token}">
+    <meta th:name="_csrf_header" th:content="${_csrf.headerName}"/>
+
+
+    <title th:text="${chapter.title}">Book title</title>
+
+    <link
+            href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
+            rel="stylesheet"
+            integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC"
+            crossorigin="anonymous"
+    />
+    <link
+            href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.3.0/font/bootstrap-icons.css"
+            rel="stylesheet"
+    />
+
+    <link rel="stylesheet" href="/css/chapter.css"/>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <script src="/js/util/autohiding.js"></script>
+    <script type="module" src="/js/util/chapter.js"></script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            initArrows();
+            autohideTop('chapter-menu');
+            autohideBottom('arrow-mobile');
+            // autohide('.autohide', '.navbar');
+            // autohide('.autohide-bottom', '.nav');
+        });
+    </script>
+
+    <script
+            src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+            crossorigin="anonymous"
+    ></script>
+
+</head>
+<body>
+
+<div class="chapter-nav offcanvas offcanvas-start" data-bs-scroll="true" tabindex="-1" id="listChapters"
+     aria-labelledby="listChaptersLabel">
+    <div class="offcanvas-header">
+        <h5 class="offcanvas-title" id="offcanvasWithBothOptionsLabel">Глави</h5>
+        <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body">
+        <div class="chapters container">
+            <a class="chapter fs-6" th:each="c : ${chapters}" th:href="@{${book.link} + '/ch/' + ${c.numberOfPage}}"
+               th:text="${c.title}"></a>
+        </div>
+    </div>
+</div>
+
+<nav id="chapter-menu" class="chapter-nav autohide navbar navbar-expand-lg navbar-dark">
+    <!--         style="background-color: #484747;"-->
+
+    <div class="container-fluid">
+        <button class="chapter-nav btn btn-button" type="button" data-bs-toggle="offcanvas"
+                data-bs-target="#listChapters" aria-controls="listChapters">
+            <i class="navbar-item bi bi-list"></i>
+        </button>
+
+
+        <div data-bs-toggle="offcanvas" data-bs-target="#listChapters" aria-controls="listChapters"
+             class="el-title text-truncate" th:text="${chapter.title}"></div>
+
+        <a class="chapter-nav btn btn-button" th:href="@{${book.link}}">
+            <i class="navbar-item bi bi-box-arrow-in-right"></i>
+        </a>
+
+    </div>
+</nav>
+<div class="container-sm container-small p-0 my-5">
+
+    <div class="section-chapter">
+        <div class="h2 section-chapter-name" th:text="${chapter.title}">Chapter title</div>
+        <div class="section-chapter-body">
+
+            <div class="mb-2 d-flex justify-content-between"
+                 th:each="p : ${chapter.text.split('\n')}"
+            >
+
+                <div th:utext="${p}" th:remove="tag"></div>
+
+                <span th:if="${isUser && mark != null}"
+                      class="bookmark p-2">
+                  <span class="bookmark_inner" th:onclick="|addBookMark(${chapter.id}, ${counter.incrementAndGet()})|">
+                    <i th:if="${paragraph == counter.get()}" th:id="bookmark-paragraph" class="bi bi-bookmark-fill"></i>
+                    <i th:if="${paragraph != counter.get()}" class="hide bi bi-bookmark"></i>
+                      <!--                    <i th:if="${chapter.bookMark == null || chapter.bookMark.paragraph != counter.get()}" class="bi bi-bookmark"></i>-->
+                  </span>
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!--         PC version arrows-->
+    <div class="position-relative">
+        <div class="arrow-left reader-arrow top-50 start-0 translate-middle-y">
+            <a th:id="keyLeft"
+               th:href="@{${ currentChapter > 1 ? (book.link + '/ch/' + (currentChapter - 1)) : book.link}}">
+                <i class="bi bi-arrow-left"></i>
+            </a>
+
+        </div>
+        <div class="arrow-right reader-arrow top-50 end-0 translate-middle-y">
+            <a th:id="keyRight"
+               th:href="@{${currentChapter < totalChapters ? (book.link + '/ch/' + (currentChapter + 1)) : (book.link)}}">
+                <i class="bi bi-arrow-right"></i>
+            </a>
+        </div>
+    </div>
+    <!--        Mobile version arrows-->
+
+
+    <div id="arrow-mobile" class="reader-arrow-mobile p-2 chapter-nav position-fixed start-0 end-0  autohide-bottom">
+        <div class="d-flex align-items-center justify-content-between">
+            <a class="btn btn-button"
+               th:href="@{${ currentChapter > 1 ? (book.link + '/ch/' + (currentChapter - 1)) : book.link}}"
+               style="width: 25%">
+                <i class="arrow-mobile bi bi-caret-left-square"></i>
+            </a>
+            <div data-bs-toggle="offcanvas" data-bs-target="#listChapters" aria-controls="listChapters"
+                 class="el-title text-truncate" th:text="${chapter.title}"></div>
+            <a class="btn btn-button" th:if="${currentChapter < totalChapters}"
+               th:href="@{${currentChapter < totalChapters ? (book.link + '/ch/' + (currentChapter + 1)) : (book.link)}}"
+               style="width: 25%">
+                <i class="arrow-mobile bi bi-caret-right-square"></i>
+            </a>
+        </div>
+
+    </div>
+
+    <div th:replace="~{fragments/messages :: messages}"></div>
+
+    <!--         Buttons for switch chapters of book and book button-->
+    <div class="d-flex my-4 justify-content-between ">
+        <a th:if="${currentChapter > 1}" class="btn btn-button text-truncate" style="width: 40%"
+           th:href="@{${book.link + '/ch/' + (currentChapter - 1)}}">Назад</a>
+        <a th:if="${currentChapter < totalChapters}" class="btn btn-button text-truncate" style="width: 40%"
+           th:href="@{${book.link + '/ch/' + (currentChapter + 1)}}">Вперед</a>
+    </div>
+
+    <!--    Book link-->
+    <a class="btn btn-button text-truncate" style="width: 100%" th:href="@{${book.link}}">Книжка</a>
+</div>
+
+
+</body>
+</html>

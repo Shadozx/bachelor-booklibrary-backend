@@ -1,0 +1,66 @@
+@import url('index.css');
+
+label {
+    margin-bottom: 10px;
+}
+
+input {
+    background-color: rgb(42 42 42) !important;
+    color: #666666 !important;
+
+    border-radius: 10px;
+    border: 2px solid transparent;
+    display: block;
+    width: 100%;
+    padding: 0.375rem 0.75rem;
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.5;
+}
+
+select {
+    background-color: rgb(42 42 42) !important;
+    color: #666666 !important;
+    padding: 1em !important;
+    border-radius: 10px;
+    border: none !important;
+    outline: none;
+}
+
+select:checked {
+    background-color: #555555;
+}
+
+input,
+.textarea {
+    background-color: rgb(42 42 42);
+    color: #666666;
+    padding: 1em;
+    border-radius: 10px;
+    border: 2px solid transparent;
+    outline: none;
+    font-family: 'Heebo', sans-serif;
+    font-weight: 500;
+    font-size: 16px;
+    line-height: 1.4;
+    width: 100%;
+}
+
+.textarea {
+    min-height: 80px;
+    /* transition: all 0.2s; */
+}
+
+input:hover,
+.textarea:hover {
+    cursor: pointer;
+    background-color: rgb(58, 58, 58);
+}
+
+input:focus,
+.textarea:focus {
+    cursor: text;
+    color: #666666;
+    background-color: rgb(58, 58, 58);
+    border-color: #333333;
+}

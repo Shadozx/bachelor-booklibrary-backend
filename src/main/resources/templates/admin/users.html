@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Список користувачів</title>
+
+    <meta th:name="_csrf" th:content="${_csrf.token}">
+    <meta th:name="_csrf_header" th:content="${_csrf.headerName}"/>
+
+    <link
+            href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
+            rel="stylesheet"
+            integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC"
+            crossorigin="anonymous"
+    />
+    <link
+            href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.3.0/font/bootstrap-icons.css"
+            rel="stylesheet"
+    />
+
+    <link rel="stylesheet" href="/css/admin.css"/>
+    <link rel="stylesheet" href="/css/user.css"/>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <script type="module" src="/js/util/admin.js"></script>
+    <script
+            src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+            crossorigin="anonymous"
+    ></script>
+</head>
+<body>
+
+
+<nav th:replace="~{fragments/navbar :: header(null)}"></nav>
+
+<div class="container container-small p-0 mt-5">
+
+    <div class="my-2">
+        <p><a href="/admin/">Адмін панель</a>/<a href="/admin/users/">Користувачі</a></p>
+    </div>
+
+    <div class="my-4">
+        <div th:replace="~{fragments/search :: search('/admin/users')}"></div>
+    </div>
+
+    <div class="my-2">
+        <div class="h2">Редагувати чи видалити</div>
+
+        <div class="my-2 d-flex flex-wrap" th:if="${totalPages > 1}">
+            <a class="btn btn-button me-2" th:each="c : ${#numbers.sequence(1, totalPages)}"
+               th:href="@{'/admin/users?page=' + ${c} + ${searchText != null ? '&search-text=' + searchText : ''}}"
+               th:text="${c}">Page</a>
+        </div>
+
+        <div class="tab border-radius text-truncate mb-2" th:each="p : ${people}">
+
+            <img
+                    class="avatar"
+                    th:if="${p.personImage}" th:src="@{${p.personImage.url}}"
+                    alt="Фото користувача"
+            />
+            <div class="tab-inner text-truncate">
+                <div class="d-flex flex-column text-truncate p-2">
+                    <a class="text-truncate" th:href="@{${p.url}}"
+                       th:text="${p.username}">
+                        Person name
+                    </a>
+
+                    <div class="text-truncate" th:text="${'Роль: ' + p.role.name()}"></div>
+                </div>
+                <div class="group-buttons">
+                    <a class="btn btn-button text-truncate mx-1" th:href="@{${'/admin/user/' + p.id} + '/edit'}"><i
+                            class="bi bi-pencil"></i></a>
+
+                    <button class="btn btn-danger text-truncate mx-1" th:onclick="|deleteUser('${p.id}')|">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div th:replace="~{fragments/messages :: messages}"></div>
+    </div>
+</div>
+
+
+</body>
+</html>

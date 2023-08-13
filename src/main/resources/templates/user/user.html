@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title th:text="'Профіль ' + ${user.username}"></title>
+
+    <meta th:name="_csrf" th:content="${_csrf.token}">
+    <meta th:name="_csrf_header" th:content="${_csrf.headerName}"/>
+
+    <link
+            href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
+            rel="stylesheet"
+            integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC"
+            crossorigin="anonymous"
+    />
+    <link
+            href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.3.0/font/bootstrap-icons.css"
+            rel="stylesheet"
+    />
+
+    <link rel="stylesheet" href="/css/index.css"/>
+
+    <link rel="stylesheet" href="/css/user.css"/>
+
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.7.2/dropzone.min.js"></script>
+
+    <script
+            src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+            crossorigin="anonymous"
+    ></script>
+
+
+    <script type="module" src="/js/util/user.js"></script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            initDropzone('#user-image');
+        });
+    </script>
+
+    <style>
+        .dz-button {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+<div th:replace="~{fragments/navbar :: header(${authUser})}"></div>
+
+
+<div class="container container-small p-0 mt-5">
+    <div class="user-info">
+        <div class="p-3">
+            <img
+                    th:if="${user.personImage}" th:src="@{${user.personImage.url}}"
+                    class="avatar"
+                    alt="Фото користувача"
+            />
+            <div class="p-2 h6" th:text="${user.username}">User name</div>
+        </div>
+        <div class="px-3 border-radius">
+            <div class="nav-tabs-horizontal nav nav-tabs" role="tablist">
+                <button
+                        class="nav-link active"
+                        data-bs-toggle="tab"
+                        data-bs-target="#user-catalogs"
+                >
+                    Каталоги
+                </button>
+                <button
+                        th:if="${isEditable}"
+                        class="nav-link"
+                        data-bs-toggle="tab"
+                        data-bs-target="#user-settings"
+                >
+                    Налаштування
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tab panes -->
+    <div class="mt-3 tab-content pt-2">
+        <!-- Каталоги користувача -->
+        <div class="tab-pane active" id="user-catalogs">
+            <div class="tabs">
+                <div
+                        class="nav-tabs-vertical nav nav-tabs"
+                        id="book-catalogs"
+                        role="tablist"
+                >
+                    <button
+                            class="nav-link active"
+                            data-bs-toggle="tab"
+                            data-bs-target="#all-catalogs"
+                    >
+                        Усі
+                    </button>
+
+                    <button
+                            th:each="c : ${catalogs}"
+                            class="nav-link"
+                            data-bs-toggle="tab"
+                            th:attr="data-bs-target='#catalog' + ${c.id}"
+
+                            th:text="${c.title}"
+                    >
+                        Catalog name
+                    </button>
+
+                    <button
+                            th:if="${isEditable}"
+                            id="catalog-edit"
+                            class="btn btn-button"
+                            data-bs-toggle="tab"
+                            data-bs-target="#edit-catalogs"
+                    >
+                        Редагувати каталоги
+                    </button>
+                    <button
+                            th:if="${isEditable}"
+                            class="btn btn-button position-absolute end-0"
+                            id="catalog-edit-mobile"
+                            data-bs-toggle="tab"
+                            data-bs-target="#edit-catalogs"
+                    >
+                        <i class="bi bi-card-list"></i>
+                    </button>
+                </div>
+
+                <div class="tabs-container tab-content">
+                    <!-- All catalogs -->
+                    <div class="tab-pane show active" id="all-catalogs">
+                        <!-- BookMark  -->
+                        <div th:each="c : ${catalogs}">
+
+                            <div class="tab border-radius text-truncate mb-2" th:if="${!c.getBookMarks().isEmpty()}"
+                                 th:each="mark : ${c.getBookMarks()}">
+                                <img
+                                        th:if="${mark.book.bookImage}" th:src="@{${mark.book.bookImage.url}}"
+                                        class="avatar"
+                                        alt="Фото книжки"
+                                />
+
+                                <div class="tab-inner text-truncate">
+                                    <div class="d-flex flex-column text-truncate p-2">
+                                        <a class="text-truncate" th:href="@{${mark.book.link}}"
+                                           th:text="${mark.book.title}">
+                                            Book name
+                                        </a>
+
+                                        <!--                    chapter link -->
+                                        <a th:href="@{${mark.url} }" th:if="${isEditable && mark.book.amount > 0}"
+                                           th:text="${mark.chapter.title}">Chapter name</a>
+                                        <a th:href="@{${mark.book.link + '/ch/1'}}"
+                                           th:unless="${isEditable && mark.book.amount > 0}">Перша глава</a>
+                                    </div>
+
+                                    <div th:if="${isEditable}" class="group-buttons">
+                                        <button class="btn btn-danger mx-1" th:onclick="|deleteMark(${mark.id})|">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="tab border-radius text-truncate mb-2" th:if="${catalogs.isEmpty()}">Поки тут немає
+                            ні однієї закладки
+                        </div>
+                    </div>
+
+                    <div class="tab-pane" th:each="c : ${catalogs}" th:id="'catalog' + ${c.id}">
+
+                        <div class="tab border-radius text-truncate mb-2" th:if="${c.getBookMarks().isEmpty()}">Поки тут
+                            немає ні однієї закладки
+                        </div>
+                        <!-- BookMark  -->
+                        <div class="tab border-radius text-truncate mb-2" th:if="${!c.getBookMarks().isEmpty()}"
+                             th:each="mark : ${c.getBookMarks()}">
+                            <img
+                                    th:if="${mark.book.bookImage}" th:src="@{${mark.book.bookImage.url}}"
+                                    class="avatar"
+                                    alt="Фото книжки"
+                            />
+                            <div class="tab-inner text-truncate">
+                                <div class="d-flex flex-column text-truncate p-2">
+                                    <a class="text-truncate" th:href="@{${mark.book.link}}"
+                                       th:text="${mark.book.title}">
+                                        Book name
+                                    </a>
+
+
+                                    <!--                    chapter link -->
+                                    <a th:href="@{${mark.url} }" th:if="${isEditable && mark.book.amount > 0}"
+                                       th:text="${mark.chapter.title}">Chapter name</a>
+                                    <a th:href="@{${mark.book.link + '/ch/1'}}"
+                                       th:unless="${isEditable && mark.book.amount > 0}">Перша глава</a>
+                                </div>
+
+                                <div th:if="${isEditable}" class="group-buttons">
+                                    <button class="btn btn-danger mx-1" th:onclick="|deleteMark(${mark.id})|">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Edit catalogs -->
+                    <div
+                            th:if="${isEditable}"
+                            class="tab-pane"
+                            id="edit-catalogs"
+                            aria-labelledby="catalog-edit"
+                    >
+                        <div class="border-radius text-truncate mb-2">
+                            <!-- Edit catalog 1 -->
+                            <div class="creator-form my-2">
+                                <div class="d-flex justify-content-between mb-3">
+                                    <input
+                                            class="me-2"
+                                            type="text"
+                                            name="add-catalog"
+                                            id="add-catalog"
+                                            placeholder="Введіть новий каталог"
+                                    />
+                                    <button class="btn btn-button" onclick="addCatalog()">+</button>
+                                </div>
+                                <div class="mb-3">
+                                    <div class="form-check form-switch">
+                                        <input
+                                                class="form-check-input"
+                                                type="checkbox"
+                                                id="isPublic"
+                                                checked
+                                        />
+                                        <label class="form-check-label" for="isPublic"
+                                        >Публічний каталог</label
+                                        >
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Edit catalogs     -->
+                            <div
+                                    class="tab background-color p-3 border-radius text-truncate mb-2"
+                                    th:each="c : ${catalogs}"
+                            >
+                                <div class="tab-inner text-truncate">
+                                    <div class="text-truncate p-2" th:text="${c.title}">
+                                        Catalog name
+                                    </div>
+
+                                    <div class="group-buttons">
+                                        <button
+                                                class="btn btn-button mx-1"
+                                                th:attr="data-id= '' + ${c.id}"
+                                                th:onclick="|editModalCatalog(this)|"
+                                        >
+                                            <i class="bi bi-pencil"></i>
+                                        </button>
+
+                                        <button class="btn btn-danger mx-1" th:onclick="|deleteCatalog(${c.id})|">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div th:if="${isEditable}"
+             class="tab-pane"
+             id="user-settings">
+
+            <!-- Налаштування користувача -->
+            <div class="d-flex flex-wrap justify-content-between">
+                <div
+                        class="nav-tabs-vertical nav nav-tabs"
+                        id="settings"
+                        role="tablist"
+                >
+                    <button
+                            class="nav-link active"
+                            data-bs-toggle="tab"
+                            data-bs-target="#user-info"
+                    >
+                        Інформація
+                    </button>
+                </div>
+
+                <div class="tabs-container tab-content">
+                    <!-- Catalog 1 -->
+                    <div
+                            class="tab-pane active"
+                            id="user-info"
+
+                    >
+
+                        <!-- N  -->
+                        <div class="tab-setting border-radius text-truncate mb-2">
+                            <div>
+                                <div class="my-2">
+                                    <label for="user-image">Фотографія користувача</label>
+                                    <form th:action="@{/api/users/image}" id="user-image" class="dropzone dz-clickable"
+                                          method="post" enctype="multipart/form-data">
+                                    </form>
+                                </div>
+
+                                <div class="my-5">
+                                    <div id="update-user" class="mb-2">
+                                        <label style="display: block" for="username"
+                                        >Імя користувача</label
+                                        >
+                                        <input
+                                                class="my-2"
+                                                type="text"
+                                                name="username"
+                                                id="username"
+
+
+                                                placeholder="Введіть нове імя"
+                                        />
+                                    </div>
+
+                                    <div class="mb-2">
+                                        <label style="display: block" for="password"
+                                        >Пароль</label
+                                        >
+                                        <input
+                                                class="my-2"
+                                                type="password"
+                                                name="password"
+                                                id="password"
+                                                placeholder="Введіть новий пароль"
+                                        />
+                                    </div>
+                                    <button id="update-button-user" type="submit" class="btn btn-button"
+                                            onclick="updateUser()">Зберегти зміни
+                                    </button>
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+</div>
+</div>
+
+
+<div th:if="${isEditable}">
+    <!--Edit catalog-->
+    <div class="modal" id="editCatalog" aria-hidden="true" tabindex="-1">
+        <div class=" modal-dialog modal-sml">
+            <div class=" modal-content border-0" style="background-color: hsl(0deg 0% 9%)">
+
+                <!-- Modal Header -->
+                <div class="modal-header">
+                    <h4 class="bg-transparent modal-title">Додати чи оновити каталог</h4>
+                    <button
+                            type="button"
+                            class="btn-close btn-close-white"
+                            data-bs-dismiss="modal"
+                            aria-label="Close"
+                    ></button>
+                </div>
+
+                <!-- Modal body -->
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="edit-catalog-name" class="col-form-label"
+                        >Назва каталога:</label
+                        >
+                        <input
+                                type="text"
+                                id="edit-catalog-name"
+                                name="catalog-name"
+                                placeholder="Введіть назву"
+
+                        />
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
+                            <input
+                                    class="form-check-input"
+                                    type="checkbox"
+                                    id="edit-isPublic"
+                                    checked
+                            />
+                            <label class="form-check-label" for="isPublic"
+                            >Публічний каталог</label
+                            >
+                        </div>
+                    </div>
+                    <!-- Modal footer -->
+
+                    <button
+                            class="btn btn-button"
+
+                            type="submit"
+                            onclick="updateCatalog()"
+                    >
+                        Додати
+                    </button>
+                    <button
+                            type="button"
+                            class="btn btn-danger"
+                            data-bs-dismiss="modal"
+                    >
+                        Закрити
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div th:replace="~{fragments/messages :: messages}"></div>
+</div>
+</body>
+</html>

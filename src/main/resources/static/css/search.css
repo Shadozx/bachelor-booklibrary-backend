@@ -1,0 +1,28 @@
+@import url("index.css");
+
+
+.container-small {
+    max-width: 700px;
+}
+
+.book {
+    border-radius: 14px;
+    background-color: var(--background-color);
+    display: flex;
+    /* justify-content: space-between; */
+    /* flex-wrap: wrap; */
+    padding: 25px;
+
+    align-items: center;
+    margin: 15px 0;
+}
+
+img {
+    max-width: 110px;
+}
+
+@media (max-width: 410px) {
+    .book {
+        padding: 10px;
+    }
+}
