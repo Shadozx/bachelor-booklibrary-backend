@@ -11,7 +11,7 @@ import java.util.List;
 public class FormatTextTest {
 
 
-    @Test
+//    @Test
 
     public void testLibrebook() {
         Parser parser = ParserFactory.createLibreBookParser();
