@@ -12,16 +12,16 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@DiscriminatorValue("Person")
+@DiscriminatorValue("User")
 @Setter
 @Getter
 @NoArgsConstructor
-public class PersonImage extends Image{
+public class PersonImage extends Image {
 
 
     @JsonIgnore
     @OneToOne
-    @JoinColumn(name = "person", nullable = true)
-    private Person person;
+    @JoinColumn(name = "owner", nullable = true)
+    private Person owner;
 
 }

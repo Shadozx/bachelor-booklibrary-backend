@@ -15,6 +15,7 @@ import java.util.List;
 public class Parser {
 
     // парсери
+
     private BookImageParser bookImageParser;
 
     private BookParser bookParser;
@@ -61,7 +62,6 @@ public class Parser {
 
         return null;
     }
-
 
 
     public List<Chapter> parseChapters(String url) {

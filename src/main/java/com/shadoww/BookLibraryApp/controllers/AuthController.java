@@ -1,41 +1,54 @@
 package com.shadoww.BookLibraryApp.controllers;
 
-
-import com.shadoww.BookLibraryApp.forms.PersonForm;
+import com.shadoww.BookLibraryApp.auth.request.AuthRequest;
+import com.shadoww.BookLibraryApp.auth.response.AuthResponse;
+import com.shadoww.BookLibraryApp.auth.service.AuthService;
+import com.shadoww.BookLibraryApp.dto.request.users.AuthPersonRequest;
 import com.shadoww.BookLibraryApp.models.user.Person;
-import com.shadoww.BookLibraryApp.services.PeopleDetailsService;
-import com.shadoww.BookLibraryApp.services.PeopleService;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.validation.Valid;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-@Controller
-@RequestMapping("/auth")
+
+@RestController
+@RequestMapping("/api/auth")
 public class AuthController {
 
+    private final AuthService service;
 
-    @GetMapping("/login")
-    public String loginPage() {
-
-        return "auth/login";
+    @Autowired
+    public AuthController(AuthService service) {
+        this.service = service;
     }
 
-    @GetMapping("/registration")
-    public String registration() {
+    @PostMapping("/registration")
+    public ResponseEntity<String> register(@RequestBody AuthPersonRequest request, BindingResult bindingResult){
 
-        return "auth/registration";
+        if(bindingResult.hasErrors()){
+            return ResponseEntity.badRequest().body("Некоректні дані для створення користувача");
+        }
+        Person registeredPerson = service.register(request);
+        return registeredPerson != null ?
+                ResponseEntity.ok("Користувач з нікнеймом " + request.getUsername() + " був успішно створений!")
+                :
+                ResponseEntity.badRequest().build();
     }
 
+    @PostMapping("/login")
+    public ResponseEntity<AuthResponse> login(@RequestBody @Validated AuthRequest request,
+                                                               BindingResult bindingResult){
 
-//    @PostMapping("/login")
-//    public String login() {
-////        System.out.println(user);
-//        return "redirect:/admin/";
-//    }
+        System.out.println(request);
+        if(bindingResult.hasErrors()){
+            return ResponseEntity.badRequest().body(new AuthResponse("Неправильний пароль"));
+        }
 
+
+        return ResponseEntity.ok(service.authenticate(request));
+    }
 }

@@ -10,6 +10,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.Cascade;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -58,8 +59,7 @@ public class Book implements Serializable {
      **/
 
     @JsonIgnore
-    @Temporal(TemporalType.TIMESTAMP)
-    @Column(columnDefinition = "date")
+    @CreationTimestamp
     private Date added;
     /**
      * Фотографія книжки
@@ -93,10 +93,6 @@ public class Book implements Serializable {
         this.uploadedUrl = uploadedUrl;
     }
 
-//    public Book(BookInstance bookInstance) {
-//        this.title = bookInstance.getTitle();
-//        this.description = bookInstance.getDescription();
-//    }
 
     public String getLink() {
         return "/book/" + id;
@@ -108,6 +104,7 @@ public class Book implements Serializable {
             this.amount = chapters.size();
         }
     }
+
 
     @Override
     public boolean equals(Object o) {

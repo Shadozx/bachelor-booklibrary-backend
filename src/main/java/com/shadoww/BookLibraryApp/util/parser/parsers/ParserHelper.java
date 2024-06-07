@@ -15,6 +15,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Base64;
 import java.util.List;
@@ -54,6 +55,7 @@ public class ParserHelper {
         image.setContentType("image/jpeg");
 
         image.setData(response.bodyAsBytes());
+
         return image;
     }
 

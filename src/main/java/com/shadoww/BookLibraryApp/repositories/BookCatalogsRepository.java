@@ -13,8 +13,8 @@ import java.util.Optional;
 public interface BookCatalogsRepository extends JpaRepository<BookCatalog, Integer> {
 
 
-    List<BookCatalog> findBookCatalogByPerson(Person person);
+    List<BookCatalog> findBookCatalogByOwner(Person owner);
 
 
-    Optional<BookCatalog> findBookCatalogByIdAndPerson(int id, Person person);
+    Optional<BookCatalog> findBookCatalogByIdAndOwner(int id, Person owner);
 }

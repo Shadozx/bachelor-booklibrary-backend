@@ -2,7 +2,7 @@ package com.shadoww.BookLibraryApp.models;
 
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.shadoww.BookLibraryApp.forms.CatalogForm;
+import com.shadoww.BookLibraryApp.dto.request.BookCatalogRequest;
 import com.shadoww.BookLibraryApp.models.user.Person;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.Cascade;
 
+import java.io.Serializable;
 import java.util.List;
 
 @Entity
@@ -18,7 +19,7 @@ import java.util.List;
 @Setter
 @Getter
 @NoArgsConstructor
-public class BookCatalog {
+public class BookCatalog implements Serializable {
 
 
     @Id
@@ -34,8 +35,8 @@ public class BookCatalog {
 
     @JsonIgnore
     @ManyToOne()
-    @JoinColumn(name = "person")
-    private Person person;
+    @JoinColumn(name = "owner")
+    private Person owner;
 
 
     @JsonIgnore
@@ -45,17 +46,23 @@ public class BookCatalog {
 
 
 
-    public BookCatalog(CatalogForm catalogForm) {
-        this.setTitle(catalogForm.getTitle());
-        this.setPublic(catalogForm.isPublic());
+    public BookCatalog(BookCatalogRequest bookCatalogRequest) {
+        this.setTitle(bookCatalogRequest.getTitle());
+        this.setIsPublic(bookCatalogRequest.getIsPublic());
+    }
+
+    public void setIsPublic(boolean isPublic) {
+        this.isPublic = isPublic;
+    }
+    public boolean getIsPublic() {
+        return isPublic;
     }
 
     @Override
     public String toString() {
-        return "BookCatalog{" +
+        return "BookCatalogResponse{" +
                 "title='" + title + '\'' +
                 ", isPublic=" + isPublic +
-                ", person=" + person +
                 '}';
     }
 }

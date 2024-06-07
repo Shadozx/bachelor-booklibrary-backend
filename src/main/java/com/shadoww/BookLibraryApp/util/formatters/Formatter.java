@@ -136,7 +136,8 @@ public class Formatter {
 
                     if (book != null) return true;
                 }
-            } else if (host.equals("flibusta.is")) {
+            }
+            else if (host.equals("flibusta.is")) {
                 Parser parser = ParserFactory.createFlibustaParser();
 
                 // книжка
@@ -188,7 +189,7 @@ public class Formatter {
                     Book book = parser.parseBook(bookUrl);
 
                     if (book != null) {
-                        booksService.save(book);
+                        booksService.create(book);
 
                         List<Chapter> chapters = parser.parseChapters(bookUrl);
 
@@ -245,7 +246,7 @@ public class Formatter {
                     if (bookImage == null) {
                         if (book != null) {
 //                    booksService.saveBookImage(book, bookImage);
-                            booksService.save(book);
+                            booksService.create(book);
                             List<Chapter> chapters = saveChapters(parser, book, url.toString());
                             return chapters != null && !chapters.isEmpty();
                         }
@@ -309,7 +310,7 @@ public class Formatter {
     private Book addAllBookWithoutBookImage(Parser parser, String url) {
         Book book = parser.parseBook(url);
         if (book != null) {
-            booksService.save(book);
+            booksService.create(book);
             saveChapters(parser, book, url);
             return book;
         }
@@ -335,116 +336,6 @@ public class Formatter {
 
         return null;
     }
-
-    /*public List<Chapter> parseChapters1(Book book) {
-        if (book != null) {
-            String url = book.getUploadedUrl();
-            if (url.matches("http:\\/\\/loveread\\.ec\\/view_global\\.php\\?id=\\d+")) {
-
-                LoveReadParser parser = new LoveReadParser();
-
-                parser.setBook(book);
-
-//                    booksService.saveBookImage(book, bookImage);
-
-                List<Chapter> chapters = parser.parseChapters(url);
-
-
-                if (chapters != null && !chapters.isEmpty()) {
-
-
-                    List<ChapterImage> images = parser.getImages();
-                    chaptersService.deleteByBook(book.getId());
-
-                    booksService.saveBook(book, chapters);
-
-                    // якщо є фотографії
-                    if (images != null && !images.isEmpty()) {
-//                        imagesService.deleteImages(book.getImages().stream().filter(i -> i.getId() != book.getBookImage().getId()).toList());
-                        imagesService.deleteChaptersImages(chaptersService.findChaptersByBook(book));
-                        imagesService.saveChapterImages(images);
-                    }
-
-                    return chapters;
-                }
-
-            }
-            else if (url.matches("https:\\/\\/librebook\\.me\\/\\w+")) {
-
-                System.out.println("Librebook:" + url);
-                LibreBookParser parser = new LibreBookParser();
-
-
-                List<Chapter> chapters = parser.parseChapters(url);
-
-
-                if (chapters != null && !chapters.isEmpty()) {
-                    chaptersService.deleteByBook(book.getId());
-
-                    booksService.saveBook(book, chapters);
-                }
-                return chapters;
-
-            }
-            else if (url.matches("https:\\/\\/4italka\\.su\\/\\w+\\/\\w+\\/\\d+\\.htm") ||
-                    url.matches("https:\\/\\/4italka\\.su\\/\\w+\\/\\w+\\/\\d+\\/fulltext.htm")) {
-
-                if (!url.endsWith("/fulltext.htm")) {
-                    int i = url.indexOf(".htm");
-                    url = url.substring(0, i) + "/fulltext" + url.substring(i);
-                }
-
-                P4itakaParser parser = new P4itakaParser();
-
-                List<Chapter> chapters = parser.parseChapters(url);
-
-
-                if (chapters != null && !chapters.isEmpty()) {
-
-                    chaptersService.deleteByBook(book.getId());
-
-                    booksService.saveBook(book, chapters);
-                }
-                return chapters;
-            }
-            else if (url.matches("http:\\/\\/flibusta\\.site\\/b\\/\\d+")) {
-                FlibustaParser parser = new FlibustaParser();
-
-
-                parser.setBook(book);
-
-
-
-                List<Chapter> chapters = parser.parseChapters(url);
-
-
-                if (chapters != null && !chapters.isEmpty()) {
-
-
-                    List<ChapterImage> images = parser.getImages();
-                    chaptersService.deleteByBook(book.getId());
-
-                    booksService.saveBook(book, chapters);
-
-                    // якщо є фотографії
-                    if (images != null && !images.isEmpty()) {
-//                        imagesService.deleteImages(book.getImages().stream().filter(i -> i.getId() != book.getBookImage().getId()).toList());
-//                        imagesService.saveImages(images);
-
-//                        imagesService.deleteImages(book.getImages().stream().filter(i -> i.getId() != book.getBookImage().getId()).toList());
-                        imagesService.deleteChaptersImages(chaptersService.findChaptersByBook(book));
-                        imagesService.saveChapterImages(images);
-                    }
-
-
-                    return chapters;
-                }
-            }
-//
-        }
-        return null;
-    }
-*/
 
     public List<Chapter> parseChapters(Book book) {
         if (book != null) {

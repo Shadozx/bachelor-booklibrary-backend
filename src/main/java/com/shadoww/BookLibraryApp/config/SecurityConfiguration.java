@@ -1,29 +1,43 @@
 package com.shadoww.BookLibraryApp.config;
 
 
-import com.shadoww.BookLibraryApp.models.user.Privilege;
+import com.shadoww.BookLibraryApp.auth.JwtAuthenticationFilter;
 import com.shadoww.BookLibraryApp.models.user.Role;
-import com.shadoww.BookLibraryApp.services.PeopleDetailsService;
+import com.shadoww.BookLibraryApp.services.PeopleService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
-import org.springframework.security.access.expression.method.DefaultMethodSecurityExpressionHandler;
-import org.springframework.security.access.expression.method.MethodSecurityExpressionHandler;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.authentication.configuration.EnableGlobalAuthentication;
+import org.springframework.security.config.annotation.authentication.configurers.userdetails.DaoAuthenticationConfigurer;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 //import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.access.expression.DefaultWebSecurityExpressionHandler;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.savedrequest.HttpSessionRequestCache;
+import org.springframework.web.cors.CorsConfiguration;
+
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+
+import java.util.List;
 
 //@EnableWebSecurity
 @Configuration
@@ -31,12 +45,17 @@ import org.springframework.security.web.savedrequest.HttpSessionRequestCache;
 public class SecurityConfiguration {
 
 
-    private PeopleDetailsService peopleDetailsService;
+    private final JwtAuthenticationFilter jwtAuthFilter;
+    private final PeopleService peopleService;
 
+    private final PasswordEncoder passwordEncoder;
 
     @Autowired
-    public SecurityConfiguration(PeopleDetailsService userDetailsImp) {
-        this.peopleDetailsService = userDetailsImp;
+    public SecurityConfiguration(JwtAuthenticationFilter jwtAuthFilter, PeopleService peopleService, PasswordEncoder passwordEncoder) {
+        this.jwtAuthFilter = jwtAuthFilter;
+
+        this.peopleService = peopleService;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Bean
@@ -46,48 +65,44 @@ public class SecurityConfiguration {
         requestCache.setMatchingRequestParameterName(null);
 
         http
-                    .requestCache(cache->cache.requestCache(requestCache))
-//                    .authorizeHttpRequests(auth->{
-//                        System.out.println("Privileges:");
-//                        for(var pr : Privilege.values()) {
-//                            System.out.println(pr);
-//                            auth.requestMatchers(pr.getUrl()).hasAuthority(pr.name());
-//                        }
-//
-//                    })
-//                    .authorizeHttpRequests().anyRequest().permitAll()
-//                .and()
-                    .formLogin()
-                        .loginPage("/auth/login")
-                        .loginProcessingUrl("/auth/login")
-                        .defaultSuccessUrl("/")
-                        .failureUrl("/auth/login?error")
-//                        .permitAll()
-                .and()
-                    .logout().logoutUrl("/auth/logout").logoutSuccessUrl("/auth/login");
+                .requestCache(cache->cache.requestCache(requestCache))
+                .csrf(AbstractHttpConfigurer::disable)
+                .headers(httpSecurityHeadersConfigurer -> {
+                    httpSecurityHeadersConfigurer.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable);
+                })
+                .cors(cors -> cors.configurationSource(request -> {
+                    var corsConfiguration = new CorsConfiguration();
+                    corsConfiguration.setAllowedOriginPatterns(List.of("*"));
+                    corsConfiguration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE"));
+                    corsConfiguration.setAllowedHeaders(List.of("*"));
+                    corsConfiguration.setAllowCredentials(true);
+                    return corsConfiguration;
+                }))
+//                .authorizeHttpRequests(request -> request
+//                        .requestMatchers(HttpMethod.POST,"/api/auth/**").permitAll()
+//                        .anyRequest().authenticated()
+//                )
+                .authenticationProvider(authenticationProvider())
+                .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
 
     @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
+    public AuthenticationProvider authenticationProvider() {
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+        provider.setUserDetailsService(peopleService);
+        provider.setPasswordEncoder(passwordEncoder);
+
+        return provider;
     }
 
     @Bean
-    @Primary
-    public AuthenticationManagerBuilder authenticationManager(AuthenticationManagerBuilder auth) throws Exception {
-        UserDetails user = User.builder()
-                .username("super_admin")
-                .password(passwordEncoder().encode("super_Dungeon141tw@"))
-//                .authorities(Role.SUPER_ADMIN.name())
-                .roles(Role.SUPER_ADMIN.name())
-                .build();
-
-        auth.inMemoryAuthentication().withUser(user);
-        auth.userDetailsService(peopleDetailsService);
-        return auth;
+    public AuthenticationManager authenticationManager (AuthenticationConfiguration config) throws Exception {
+        return config.getAuthenticationManager();
     }
+
 
     @Bean
     public RoleHierarchy roleHierarchy() {

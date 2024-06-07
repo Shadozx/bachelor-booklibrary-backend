@@ -21,9 +21,6 @@ import java.util.UUID;
 @NoArgsConstructor
 public class Image implements Serializable {
 
-
-//    @Type(type = "org.hibernate.type.BinaryType")
-
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private int id;
@@ -31,7 +28,7 @@ public class Image implements Serializable {
 
     private String contentType = "image/jpeg";
 
-//    @Column(columnDefinition = "varchar")
+    @Column(columnDefinition = "bytea")
     private byte[] data;
 
 
@@ -39,48 +36,17 @@ public class Image implements Serializable {
     @NotBlank(message = "Filename cannot be empty")
     private String filename;
 
-
-
-//    @JsonIgnore
-//    @ManyToOne
-//    @JoinColumn(name = "chapter", referencedColumnName = "id")
-//    private Chapter chapter;
     @Transient
     private String url;
 
-    /**
-     * contentType: String,
-     *   data: { type: Buffer, required: true },
-     *   book: { type: Schema.Types.ObjectId, ref: 'Book' },
-     *   filename: { type: String, required: true },
-     *   url: { type: String, required: true },
-     *
-     * */
 
     public Image(String filename) {
         this.filename = filename;
     }
 
 
-
-//    public void setChapter(Book book, int i) {
-//        if (book != null) {
-//            this.book = book;
-//            this.filename = book.getId() + "_" + i + ".jpeg";
-//        }
-//    }
-
-//    public void setChapter(Book book, List<Image> images) {
-//    public void setChapterImage(Book book) {
-//        if (book != null) {
-//            this.book = book;
-////            this.filename = book.getId() + "_" + (images.size() + 1) + ".jpeg";
-//            this.filename = book.getId() + "_" + UUID.randomUUID() + ".jpeg";
-//        }
-//    }
-
     private static String getStandardImageUrl() {
-        return "/api/media/";
+        return "http://localhost:9091/api/media/";
     }
 
 
@@ -91,13 +57,4 @@ public class Image implements Serializable {
     public String getUrl() {
         return getStandardImageUrl() + filename;
     }
-
-//    @Override
-//    public String toString() {
-//        return "Image{" +
-//                "id=" + id +
-//                ", contentType='" + contentType + '\'' +
-//                ", filename='" + filename + '\'' +
-//                '}';
-//    }
 }

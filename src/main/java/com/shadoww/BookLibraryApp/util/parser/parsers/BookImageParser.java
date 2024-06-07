@@ -5,6 +5,7 @@ import lombok.Setter;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
+import java.io.FileOutputStream;
 import java.io.IOException;
 
 
@@ -26,6 +27,7 @@ public class BookImageParser {
 
                 String imageUrl = elementLink.absUrl("src");
                 this.bookImage = (BookImage) ParserHelper.parseImage(imageUrl);
+
 
                 return this.bookImage;
             } else if (elementLink.tagName().equals("a")) {

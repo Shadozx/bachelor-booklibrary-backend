@@ -5,19 +5,18 @@ import com.shadoww.BookLibraryApp.models.BookCatalog;
 import com.shadoww.BookLibraryApp.models.BookMark;
 import com.shadoww.BookLibraryApp.models.user.Person;
 import com.shadoww.BookLibraryApp.repositories.BookMarksRepository;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 import java.util.Optional;
 
 @Service
 @Transactional(readOnly = true)
 public class BookMarksService {
 
-    private BookMarksRepository bookMarksRepository;
+    private final BookMarksRepository bookMarksRepository;
 
 
     @Autowired
@@ -25,40 +24,39 @@ public class BookMarksService {
         this.bookMarksRepository = bookMarksRepository;
     }
 
+    public BookMark readById(int id) {
 
-    /*public boolean existsBookMark(int chapter, int paragraph) {
+        return bookMarksRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Такої закладки книги не існує"));
+    }
 
-        return bookMarksRepository.existsBookMarkByChapter_IdAndParagraph(chapter, paragraph);
-    }*/
+    public BookMark findBookMark(int chapter, int paragraph) {
 
-    public Optional<BookMark> findOne(int id) { return bookMarksRepository.findById(id);}
-
-    public Optional<BookMark> findBookMark(int chapter, int paragraph) {
-
-        return bookMarksRepository.findBookMarkByChapter_IdAndParagraph(chapter, paragraph);
+        return bookMarksRepository.findBookMarkByChapter_IdAndParagraph(chapter, paragraph)
+                .orElseThrow(() -> new EntityNotFoundException("Такої закладки книги не існує"));
     }
 
     public Optional<BookMark> findByCatalogAndBook(int catalogId, int bookId) {
         return bookMarksRepository.findByCatalog_IdAndBook_Id(catalogId, bookId);
     }
 
-    public Optional<BookMark> findByBookAndPerson(Book book, Person person) {
-        return bookMarksRepository.findByBookAndPerson(book, person);
+    public BookMark findByBookAndOwner(Book book, Person owner) {
+        return bookMarksRepository.findByBookAndOwner(book, owner).orElseThrow(()->new EntityNotFoundException("Такої закладки не існує"));
     }
 
     @Transactional
-    public void saveBookMark(BookMark bookMark) {
+    public BookMark create(BookMark bookMark) {
 
-        if (bookMark != null) {
-
-            save(bookMark);
+        if (bookMark == null) {
+            throw new NullPointerException("Закладки книги не може бути пустою");
         }
 
+        return save(bookMark);
     }
 
     @Transactional
-    public void save(BookMark bookMark) {
-        bookMarksRepository.save(bookMark);
+    public BookMark save(BookMark bookMark) {
+        return bookMarksRepository.save(bookMark);
     }
 
 
@@ -69,25 +67,37 @@ public class BookMarksService {
 
 
     @Transactional
-    public void update(BookMark updated, int id) {
+    public BookMark update(BookMark updated, int id) {
 
-        Optional<BookMark> forUpdate = findOne(id);
+        BookMark forUpdate = readById(id);
 
-        if(forUpdate.isPresent()) {
 
-            forUpdate.get().setPerson(updated.getPerson());
-            forUpdate.get().setBook(updated.getBook());
+        forUpdate.setOwner(updated.getOwner());
+        forUpdate.setBook(updated.getBook());
 
-            forUpdate.get().setChapter(updated.getChapter());
-            forUpdate.get().setCatalog(updated.getCatalog());
-            forUpdate.get().setParagraph(updated.getParagraph());
+        forUpdate.setChapter(updated.getChapter());
+        forUpdate.setCatalog(updated.getCatalog());
+        forUpdate.setParagraph(updated.getParagraph());
 
-            save(forUpdate.get());
-        }
+        return save(forUpdate);
+
     }
+
+    @Transactional
+    public BookMark update(BookMark updatedMark) {
+        if (updatedMark == null) {
+            throw new NullPointerException("Закладки книги не може бути пустою");
+        }
+
+        readById(updatedMark.getId());
+
+        return save(updatedMark);
+    }
+
     @Transactional
     public void deleteById(int id) {
-        bookMarksRepository.deleteById(id);
+        BookMark mark = readById(id);
+        delete(mark);
     }
 
 

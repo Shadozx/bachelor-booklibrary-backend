@@ -6,7 +6,8 @@ import jakarta.validation.constraints.Min;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.hibernate.annotations.Cascade;
+
+import java.io.Serializable;
 
 
 @Entity
@@ -14,7 +15,7 @@ import org.hibernate.annotations.Cascade;
 @Setter
 @Getter
 @NoArgsConstructor
-public class BookMark {
+public class BookMark implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -27,7 +28,6 @@ public class BookMark {
      **/
     @ManyToOne
     @JoinColumn(name = "catalog")
-//    @Cascade({org.hibernate.annotations.CascadeType.REMOVE})
     private BookCatalog catalog;
 
 
@@ -35,7 +35,6 @@ public class BookMark {
     @JoinColumn(name = "book")
     private Book book;
 
-//    private Chapter chapter;
 
     @ManyToOne
     @JoinColumn(name = "chapter")
@@ -43,13 +42,13 @@ public class BookMark {
 
 
     @Min(value = 0)
-    private int paragraph;
+    private int paragraph = 0;
 
 
     @ManyToOne
-    @JoinColumn(name = "person")
+    @JoinColumn(name = "owner")
 //    @Cascade({org.hibernate.annotations.CascadeType.REMOVE})
-    private Person person;
+    private Person owner;
 
 
     @Transient
@@ -57,24 +56,23 @@ public class BookMark {
 
 
 
-    public String getUrl() {
-        return "/book/"+ book.getId() + "/ch/" + chapter.getNumberOfPage();
-//        return "/book/"+ book.getId() + "/ch/" + chapter.getNumberOfPage() + (paragraph != 0 ? "?par=" + paragraph : "");
-    }
+//    public String getUrl() {
+//        return "/book/"+ book.getId() + "/ch/" + chapter.getNumberOfPage();
+//    }
 
 
-    public boolean isValid() {
-        return this.book != null &&
-               this.catalog != null &&
-               this.chapter != null &&
-               this.person != null &&
-               this.paragraph >= 0;
-    }
+//    public boolean isValid() {
+//        return this.book != null &&
+//               this.catalog != null &&
+//               this.chapter != null &&
+//               this.owner != null &&
+//               this.paragraph >= 0;
+//    }
     @Override
     public String toString() {
         return "BookMark{" +
-                "book=" + book +
-                ", chapter=" + chapter +
+//                "book=" + book +
+//                ", chapter=" + chapter +
                 ", paragraph=" + paragraph +
                 '}';
     }

@@ -1,6 +1,7 @@
 package com.shadoww.BookLibraryApp.repositories;
 
 import com.shadoww.BookLibraryApp.models.Book;
+import com.shadoww.BookLibraryApp.models.BookCatalog;
 import com.shadoww.BookLibraryApp.models.BookMark;
 import com.shadoww.BookLibraryApp.models.user.Person;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -11,9 +12,7 @@ import java.util.Optional;
 @Repository
 public interface BookMarksRepository extends JpaRepository<BookMark, Integer> {
 
-//    Optional<BookMark> findBookMarkByChapter_IdAndParagraph(int chapterId, int paragraph);
-
-    Optional<BookMark> findByBookAndPerson(Book book, Person person);
+    Optional<BookMark> findByBookAndOwner(Book book, Person owner);
 
     Optional<BookMark> findByCatalog_IdAndBook_Id(int catalogId, int bookId);
 

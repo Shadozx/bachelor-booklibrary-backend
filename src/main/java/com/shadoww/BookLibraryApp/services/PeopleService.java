@@ -2,11 +2,16 @@ package com.shadoww.BookLibraryApp.services;
 
 import com.shadoww.BookLibraryApp.models.user.Person;
 import com.shadoww.BookLibraryApp.models.user.Role;
+import com.shadoww.BookLibraryApp.models.user.Theme;
 import com.shadoww.BookLibraryApp.repositories.PeopleRepository;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,27 +21,42 @@ import java.util.Optional;
 
 @Service
 @Transactional(readOnly = true)
-public class PeopleService {
+public class PeopleService implements UserDetailsService {
 
-    private PeopleRepository peopleRepository;
+    private final PeopleRepository peopleRepository;
 
-    private PasswordEncoder passwordEncoder;
+    private final PasswordEncoder passwordEncoder;
+
     @Autowired
     public PeopleService(PeopleRepository peopleRepository, PasswordEncoder passwordEncoder) {
         this.peopleRepository = peopleRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
-    public Page<Person> findALl(int page) {
+    public List<Person> getAll() {
+        return peopleRepository.findAll();
+    }
+
+    public Page<Person> getALl(int page) {
         return peopleRepository.findAll(PageRequest.of(page, 20, Sort.by(Sort.Direction.ASC, "username")));
     }
 
-    public Page<Person> findByUsername(String username, int page) {
+    public Person readByUsername(String username) {
+
+        return peopleRepository
+                .findByUsername(username)
+                .orElseThrow(
+                        () -> new EntityNotFoundException(
+                                String.format("Користувача з нікнеймом %s не існує", username)));
+    }
+
+
+    public Page<Person> readByUsername(String username, int page) {
         return peopleRepository.findByUsernameContainingIgnoreCase(PageRequest.of(page, 20, Sort.by(Sort.Direction.ASC, "username")), username);
     }
 
-    public Optional<Person> findById(int id) {
-        return peopleRepository.findById(id);
+    public Person readById(int id) {
+        return peopleRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Такого користувача не існує"));
     }
 
 
@@ -44,33 +64,51 @@ public class PeopleService {
         return peopleRepository.existsByUsernameIgnoreCase(username);
     }
 
-    @Transactional
-    public void savePerson(Person user) {
-        user.setRole(Role.USER);
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
-        save(user);
+    public boolean existSUPERADMIN() {
+        return peopleRepository.existsByRole(Role.SUPER_ADMIN);
     }
 
     @Transactional
-    public void update(Person person) {
+    public Person create(Person person) {
+
+        person.setRole(Role.USER);
+        person.setTheme(Theme.LIGHT);
+
         person.setPassword(passwordEncoder.encode(person.getPassword()));
 
-        save(person);
+        return save(person);
+
     }
 
     @Transactional
-    public void save(Person person) {
-        peopleRepository.save(person);
+    public Person update(Person person) {
+
+
+        return save(person);
     }
 
+    @Transactional
+    public Person save(Person person) {
+        return peopleRepository.save(person);
+    }
 
     @Transactional
-    public void delete(Person person) {
+    public void deleteById(int id) {
+        delete(readById(id));
+    }
+
+    @Transactional
+    void delete(Person person) {
         peopleRepository.delete(person);
     }
-    @Transactional
-    public void deletePerson(int id) {
-        peopleRepository.deleteById(id);
+
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        try {
+            return readByUsername(username);
+        }catch (EntityNotFoundException e) {
+            throw new UsernameNotFoundException(e.getMessage());
+        }
     }
 }
 

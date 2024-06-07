@@ -20,6 +20,7 @@ public class BookParser {
         Document main = ParserHelper.getDocument(url);
 
 
+
         Element title = main.select(titleSelector).first();
         Element description = main.select(descriptionSelector).first();
 

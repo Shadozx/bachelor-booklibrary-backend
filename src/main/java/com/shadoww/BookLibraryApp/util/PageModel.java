@@ -4,7 +4,6 @@ import com.shadoww.BookLibraryApp.models.Book;
 import com.shadoww.BookLibraryApp.models.BookCatalog;
 import com.shadoww.BookLibraryApp.models.BookMark;
 import com.shadoww.BookLibraryApp.models.Chapter;
-import com.shadoww.BookLibraryApp.security.PersonDetails;
 import org.springframework.ui.Model;
 
 import java.util.List;
@@ -16,9 +15,6 @@ public class PageModel {
         this.model = model;
     }
 
-    public void authUser(PersonDetails authUser){
-        model.addAttribute("authUser", authUser);
-    }
 
     public void chapters(List<Chapter> chapters) {
         model.addAttribute("chapters", chapters);

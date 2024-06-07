@@ -18,32 +18,10 @@ import java.util.Arrays;
 @NoArgsConstructor
 public class BookImage extends Image {
 
-
-//    @Id
-//    @GeneratedValue(strategy = GenerationType.IDENTITY)
-//    private int id;
-
-
     @JsonIgnore
     @OneToOne(optional = true)
     @JoinColumn(name = "book", nullable = true)
     private Book book;
-
-
-//    private String contentType;
-//
-////    @Column(columnDefinition = "varchar")
-//    private byte[] data;
-//
-//
-//    private String filename;
-
-
-
-    //    @JsonIgnore
-//    @ManyToOne
-//    @JoinColumn(name = "chapter", referencedColumnName = "id")
-//    private Chapter chapter;
 
     public BookImage(Image image) {
         this.setContentType(image.getContentType());
@@ -51,12 +29,11 @@ public class BookImage extends Image {
     }
 
     public void setBook(Book book) {
-        if(book!= null) {
+        if (book != null) {
             this.book = book;
-            this.setFilename( book.getId() + ".jpeg");
+            this.setFilename(book.getId() + ".jpeg");
         }
     }
-
 
 
 }

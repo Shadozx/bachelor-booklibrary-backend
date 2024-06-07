@@ -1,28 +1,29 @@
 package com.shadoww.BookLibraryApp.services;
 
+import com.shadoww.BookLibraryApp.dto.request.books.BookFilterRequest;
 import com.shadoww.BookLibraryApp.models.Book;
 import com.shadoww.BookLibraryApp.models.Chapter;
 import com.shadoww.BookLibraryApp.models.images.BookImage;
 import com.shadoww.BookLibraryApp.repositories.BooksRepository;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
 @Service
 @Transactional(readOnly = true)
 public class BooksService {
-    private BooksRepository booksRepository;
+    private final BooksRepository booksRepository;
 
 
-    private ImagesService imagesService;
+    private final ImagesService imagesService;
     //
-    private ChaptersService chaptersService;
+    private final ChaptersService chaptersService;
 
     @Autowired
     public BooksService(BooksRepository booksRepository, ImagesService imagesService, ChaptersService chaptersService) {
@@ -33,6 +34,24 @@ public class BooksService {
 
     public List<Book> findBooks() {
         return booksRepository.findAll();
+    }
+
+    public List<Book> filterBooks(BookFilterRequest filterRequest) {
+
+
+        return findBooks().stream()
+                .filter(book -> filterRequest.getSearchText() == null || book.getTitle().toLowerCase().contains(filterRequest.getSearchText()))
+                .filter(book -> filterRequest.getFromAmount() == null || book.getChapters().size() >= filterRequest.getFromAmount())
+                .filter(book -> filterRequest.getToAmount() == null || book.getChapters().size() <= filterRequest.getToAmount())
+                .filter(book -> filterRequest.getFromYear() == null || book.getAdded().getYear() >= filterRequest.getFromYear())
+                .filter(book -> filterRequest.getToYear() == null || book.getAdded().getYear() <= filterRequest.getToYear())
+                .toList();
+    }
+
+    public Book readById(int id) {
+
+        return booksRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Такої книги не існує"));
     }
 
     public Page<Book> findBooksByPage(int page) {
@@ -51,16 +70,13 @@ public class BooksService {
         return booksRepository.findByUploadedUrl(url);
     }
 
-    public Optional<Book> findOne(int id) {
-        return booksRepository.findById(id);
-    }
 
-    public List<Book> findLastBooks() {
-        //return booksRepository.findFirst1OrderByAdded();
-//        return booksRepository.findTop10(Sort.by(Sort.Direction.ASC, "added"));
-        return booksRepository.findTop10ByOrderByAddedDesc();
-//        return List.of();
-    }
+//    public List<Book> findLastBooks() {
+//        //return booksRepository.findFirst1OrderByAdded();
+////        return booksRepository.findTop10(Sort.by(Sort.Direction.ASC, "added"));
+//        return booksRepository.findTop10ByOrderByAddedDesc();
+////        return List.of();
+//    }
 
 
     public boolean exists(String uploadedUrl) {
@@ -69,39 +85,45 @@ public class BooksService {
 
 
     @Transactional
-    public Book save(Book book) {
-        if (book != null) {
-            book.setAdded(new Date());
-            booksRepository.save(book);
+    public Book create(Book book) {
+
+        if (book == null) {
+            throw new NullPointerException("Книга не може бути пустою");
         }
-        return book;
+
+
+        return booksRepository.save(book);
     }
 
 
     @Transactional
     public void saveChapter(int bookId, Chapter newChapter) {
-        Optional<Book> foundBook = findOne(bookId);
-
-        if (foundBook.isPresent()) {
-
-            foundBook.get().setAmount(foundBook.get().getAmount() + 1);
-
-            newChapter.setBook(foundBook.get());
+        Book book = readById(bookId);
 
 
-            chaptersService.save(newChapter);
-            update(bookId, foundBook.get());
-        }
+        book.setAmount(book.getAmount() + 1);
+
+        newChapter.setBook(book);
+
+
+        chaptersService.save(newChapter);
+        update(book);
     }
 
     @Transactional
     public void saveBookImage(Book book, BookImage bookImage) {
-        if (book != null && bookImage != null) {
-
-            save(book);
-
-            updateBookImage(book, bookImage);
+        if (book == null) {
+            throw new NullPointerException("Книга не може бути пустою");
         }
+
+        if (bookImage == null) {
+            throw new NullPointerException("Фото книги не може бути пустим");
+        }
+
+
+        create(book);
+
+        updateBookImage(book, bookImage);
     }
 
     @Transactional
@@ -112,7 +134,7 @@ public class BooksService {
 
         imagesService.save(bookImage);
 
-        save(book);
+        update(book);
     }
 
     @Transactional
@@ -130,7 +152,7 @@ public class BooksService {
 //            book.setChapters(chapters);
 
 
-            save(book);
+            update(book);
 
         } else {
             System.out.println("Глав немає");
@@ -142,7 +164,7 @@ public class BooksService {
 
         if (book != null && bookImage != null && !chapters.isEmpty()) {
 
-            save(book);
+            create(book);
 
 
             book.setBookImage(bookImage);
@@ -161,7 +183,7 @@ public class BooksService {
             book.setAmount(chapters.size());
             System.out.println("?");
 
-            save(book);
+            update(book);
 
             System.out.println("?");
 
@@ -173,44 +195,53 @@ public class BooksService {
 
 
     @Transactional
-    public void update(int id, Book updatedBook) {
+    public Book update(Book updatedBook) {
 
-        Optional<Book> forUpdate = findOne(id);
+        Book oldBook = readById(updatedBook.getId());
 
-        if (forUpdate.isPresent()) {
 
-            forUpdate.get().setTitle(updatedBook.getTitle());
-            forUpdate.get().setDescription(updatedBook.getDescription());
+        oldBook.setTitle(updatedBook.getTitle());
+        oldBook.setDescription(updatedBook.getDescription());
+        oldBook.setAmount(updatedBook.getAmount());
 
-            save(forUpdate.get());
+        return save(oldBook);
+
+    }
+
+
+    @Transactional
+    Book save(Book book) {
+        return booksRepository.save(book);
+    }
+    @Transactional
+    public void updateBookAndImage(Book updated, BookImage bookImage) {
+
+        Book forUpdate = readById(updated.getId());
+
+
+        if (bookImage == null) {
+            throw new NullPointerException("Фото книги не може бути пустою");
         }
+
+        forUpdate.setBookImage(bookImage);
+        bookImage.setBook(forUpdate);
+
+        imagesService.save(bookImage);
+
+
+        save(forUpdate);
+    }
+
+
+    @Transactional
+    public void deleteById(int id) {
+        Book book = readById(id);
+
+        delete(book);
     }
 
     @Transactional
-    public void updateBookAndImage(int id, Book updated, BookImage bookImage) {
-
-        Optional<Book> forUpdate = findOne(id);
-
-        if (forUpdate.isPresent()) {
-            if (bookImage != null) {
-                forUpdate.get().setBookImage(bookImage);
-//                bookImage.setBook(forUpdate.get());
-
-                imagesService.save(bookImage);
-            }
-            if (!forUpdate.get().equals(updated)) {
-                forUpdate.get().setTitle(updated.getTitle());
-                forUpdate.get().setDescription(updated.getDescription());
-            }
-
-            save(forUpdate.get());
-        }
-    }
-
-    @Transactional
-    public void deleteBook(Book book) {
-
-
+    void delete(Book book) {
         booksRepository.delete(book);
     }
 
@@ -225,7 +256,7 @@ public class BooksService {
             save(book);
         }
 
-        chaptersService.deleteOne(chapter);
+        chaptersService.deleteById(chapter.getId());
     }
 
 
