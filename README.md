@@ -14,7 +14,6 @@
   - `spring-boot-starter-data-jpa` — доступ до БД через JPA  
   - `spring-boot-starter-validation` — валідація DTO  
   - `spring-boot-starter-security` — авторизація та аутентифікація  
-  - `spring-boot-starter-thymeleaf` — шаблонізатор для веб-інтерфейсу
 - **PostgreSQL** — основна база даних
 - **H2** — база для тестування
 - **Lombok** — скорочення шаблонного коду (гетери, сетери, конструктори)
